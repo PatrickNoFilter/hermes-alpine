@@ -1,0 +1,69 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.mcp-venv/
+.slm-env/
+node/
+
+# Runtime & data (NEVER commit)
+audio_cache/
+image_cache/
+lcm-large-outputs/
+cache/
+logs/
+sessions/
+memories/
+state/
+state-snapshots/
+sandboxes/
+spawn-trees/
+lsp/
+pastes/
+
+# Database files
+*.db
+*.db-shm
+*.db-wal
+kanban.db
+
+# Auth & credentials
+.env
+auth.json
+auth.lock
+gateway_state.json
+pairing/
+webui.ctl.env
+webui.pid
+webui.log
+webui-cron.log
+processes.json
+
+# Backup configs (contain live keys)
+config.yaml.bak*
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Logs & output
+*.log
+lcm-large-outputs/
+
+# Lock files that track runtime state
+*.lock
+cron/

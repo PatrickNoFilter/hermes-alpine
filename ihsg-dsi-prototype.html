@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IHSG RUNTUH, DSI KONTROVERSI — Prototipe Visual</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; font-family: 'Inter', sans-serif; color: #e8e8ed; overflow: hidden; height: 100vh; }
+
+  .slide-container {
+    width: 100vw; height: 100vh;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 60px 80px;
+    position: relative;
+    transition: opacity 0.3s ease;
+  }
+
+  .slide-container.hidden { display: none; }
+
+  /* Number badge */
+  .slide-number {
+    position: absolute; top: 28px; left: 40px;
+    font-size: 13px; color: rgba(255,255,255,0.25);
+    font-weight: 500; letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .slide-section {
+    position: absolute; top: 28px; right: 40px;
+    font-size: 13px; color: rgba(255,255,255,0.2);
+    font-weight: 400; letter-spacing: 1px;
+  }
+
+  /* Content areas */
+  .slide-title {
+    font-size: 48px; font-weight: 800; line-height: 1.15;
+    letter-spacing: -1px; margin-bottom: 18px;
+    max-width: 85%;
+  }
+  .slide-subtitle {
+    font-size: 22px; font-weight: 300; color: rgba(255,255,255,0.5);
+    letter-spacing: 0.3px; margin-bottom: 32px;
+  }
+  .slide-body {
+    font-size: 18px; line-height: 1.7; font-weight: 300;
+    color: rgba(255,255,255,0.75); max-width: 85%;
+  }
+  .slide-body strong { color: #fff; font-weight: 600; }
+
+  /* Data display */
+  .data-row {
+    display: flex; gap: 24px; margin-top: 28px; flex-wrap: wrap;
+  }
+  .data-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 20px 28px;
+    min-width: 180px;
+  }
+  .data-card .label { font-size: 12px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .data-card .value { font-size: 28px; font-weight: 700; color: #fff; }
+  .data-card .value.red { color: #ef4444; }
+  .data-card .value.green { color: #22c55e; }
+  .data-card .value.yellow { color: #eab308; }
+  .data-card .source { font-size: 11px; color: rgba(255,255,255,0.2); margin-top: 6px; }
+
+  /* Chart bars */
+  .chart-bars { display: flex; align-items: flex-end; gap: 16px; margin-top: 28px; height: 200px; padding: 0 10px; }
+  .bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; }
+  .bar { width: 48px; border-radius: 6px 6px 0 0; transition: height 0.6s ease; min-height: 4px; position: relative; }
+  .bar .val { position: absolute; top: -24px; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .bar-label { font-size: 12px; color: rgba(255,255,255,0.4); }
+  .bar.red { background: linear-gradient(180deg, #ef4444, #dc2626); }
+  .bar.green { background: linear-gradient(180deg, #22c55e, #16a34a); }
+  .bar.yellow { background: linear-gradient(180deg, #eab308, #ca8a04); }
+  .bar.blue { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+  .bar.gray { background: linear-gradient(180deg, #6b7280, #4b5563); }
+
+  /* Timeline */
+  .timeline { display: flex; align-items: flex-start; gap: 0; margin-top: 32px; width: 100%; max-width: 90%; }
+  .tl-node { flex: 1; text-align: center; position: relative; }
+  .tl-node::before { content: ''; position: absolute; top: 20px; left: 50%; width: 100%; height: 2px; background: rgba(255,255,255,0.1); }
+  .tl-node:last-child::before { display: none; }
+  .tl-dot { width: 12px; height: 12px; border-radius: 50%; background: #ef4444; margin: 0 auto 12px; position: relative; z-index: 2; }
+  .tl-dot.blue { background: #3b82f6; }
+  .tl-dot.green { background: #22c55e; }
+  .tl-dot.yellow { background: #eab308; }
+  .tl-date { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+  .tl-event { font-size: 13px; color: #fff; font-weight: 500; }
+  .tl-detail { font-size: 11px; color: rgba(255,255,255,0.35); margin-top: 2px; }
+
+  /* Quote */
+  .quote-block {
+    border-left: 3px solid #ef4444;
+    padding-left: 24px; margin: 24px 0;
+    font-size: 22px; font-weight: 400; line-height: 1.6;
+    color: rgba(255,255,255,0.85); font-style: italic;
+    max-width: 80%;
+  }
+  .quote-block .attribution { font-size: 14px; color: rgba(255,255,255,0.3); margin-top: 8px; font-style: normal; }
+
+  /* List */
+  .step-list { margin-top: 24px; max-width: 85%; }
+  .step-item { display: flex; gap: 16px; margin-bottom: 16px; align-items: flex-start; }
+  .step-num { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; flex-shrink: 0; color: #fff; }
+  .step-text { font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.7); padding-top: 4px; }
+  .step-text strong { color: #fff; }
+
+  /* Buttons */
+  .nav-buttons {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 12px; z-index: 100;
+  }
+  .nav-btn {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #e8e8ed; padding: 10px 24px;
+    border-radius: 10px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 14px;
+    transition: all 0.2s; font-weight: 500;
+  }
+  .nav-btn:hover { background: rgba(255,255,255,0.12); }
+  .nav-btn:disabled { opacity: 0.2; cursor: default; }
+  .nav-btn.primary { background: #ef4444; border-color: #ef4444; color: #fff; }
+  .nav-btn.primary:hover { background: #dc2626; }
+
+  .progress-bar {
+    position: fixed; bottom: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    transition: width 0.3s ease; z-index: 101;
+  }
+
+  /* Big number display */
+  .big-number { font-size: 72px; font-weight: 900; letter-spacing: -3px; color: #fff; line-height: 1; }
+  .big-number.red { color: #ef4444; }
+  .big-number .suffix { font-size: 24px; font-weight: 300; color: rgba(255,255,255,0.3); letter-spacing: 0; }
+  .big-number .sub { font-size: 18px; font-weight: 300; color: rgba(255,255,255,0.25); display: block; margin-top: 4px; letter-spacing: 0; }
+
+  /* Two column */
+  .two-col { display: flex; gap: 48px; max-width: 90%; margin-top: 20px; }
+  .two-col .col { flex: 1; }
+
+  /* Target table */
+  .target-table { display: flex; gap: 24px; margin-top: 24px; }
+  .target-card {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px; padding: 24px 28px; flex: 1;
+  }
+  .target-card .period { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 4px; }
+  .target-card .goal { font-size: 15px; color: rgba(255,255,255,0.6); line-height: 1.5; }
+  .target-card.red { border-color: rgba(239,68,68,0.2); }
+  .target-card.green { border-color: rgba(34,197,94,0.2); }
+
+  /* Closing card */
+  .closing-text {
+    font-size: 28px; font-weight: 300; color: rgba(255,255,255,0.5);
+    text-align: center; max-width: 75%;
+    line-height: 1.6;
+    margin-bottom: 24px;
+  }
+  .closing-highlight {
+    font-size: 36px; font-weight: 700; color: #fff;
+    text-align: center; letter-spacing: -0.5px;
+  }
+
+  @media (max-width: 768px) {
+    .slide-container { padding: 30px 24px; }
+    .slide-title { font-size: 28px; max-width: 100%; }
+    .slide-body { font-size: 15px; max-width: 100%; }
+    .data-row { flex-direction: column; }
+    .chart-bars { height: 140px; gap: 8px; }
+    .bar { width: 28px; }
+    .two-col { flex-direction: column; gap: 20px; }
+    .quote-block { font-size: 16px; max-width: 100%; }
+    .nav-buttons { gap: 6px; }
+    .nav-btn { padding: 8px 14px; font-size: 12px; }
+    .big-number { font-size: 44px; }
+    .slide-subtitle { font-size: 16px; }
+    .step-list { max-width: 100%; }
+    .closing-text { font-size: 18px; max-width: 100%; }
+    .closing-highlight { font-size: 22px; }
+    .target-table { flex-direction: column; }
+    .timeline { flex-wrap: wrap; gap: 16px; }
+    .tl-node { flex: auto; min-width: 120px; }
+    .tl-node::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="slide1" class="slide-container">
+  <span class="slide-number">01 / 16</span>
+  <span class="slide-section">PEMBUKA</span>
+  <div style="text-align:center">
+    <div style="font-size:14px;color:rgba(255,255,255,0.2);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px">Dokumenter Analitis</div>
+    <div class="slide-title" style="max-width:100%;text-align:center;font-size:54px">IHSG RUNTUH,<br>DSI KONTROVERSI</div>
+    <div class="slide-subtitle" style="text-align:center;max-width:100%;font-size:20px;color:rgba(255,255,255,0.35)">Ada yang Tidak Beres — Lalu Apa yang Bisa Diperbaiki?</div>
+    <div style="margin-top:40px">
+      <svg width="120" height="60" viewBox="0 0 120 60">
+        <polyline points="10,50 30,40 50,42 70,30 90,28 110,10" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/>
+        <circle cx="110" cy="10" r="4" fill="#ef4444"/>
+      </svg>
+    </div>
+  </div>
+  <div class="nav-buttons"><button class="nav-btn primary" onclick="go(2)">Mulai →</button></div>
+  <div class="progress-bar" style="width:6.25%"></div>
+</div>
+
+<div id="slide2" class="slide-container hidden">
+  <span class="slide-number">02 / 16</span>
+  <span class="slide-section">BAGIAN 1 — FAKTA</span>
+  <div class="slide-title">Lebih Parah dari Pandemi</div>
+  <div class="slide-body">
+    Dalam beberapa bulan terakhir, IHSG kehilangan <strong>35–38%</strong> nilainya dari puncak.
+    Bukan koreksi biasa — ini yang terdalam di Asia.
+  </div>
+  <div class="data-row">
+    <div class="data-card"><div class="label">IHSG dari Puncak</div><div class="value red">−38%</div><div class="source">Detik Finance</div></div>
+    <div class="data-card"><div class="label">Outflow Asing</div><div class="value red">>Rp65 T</div><div class="source">Detik Finance</div></div>
+    <div class="data-card"><div class="label">Peringkat Asia</div><div class="value red">TERBURUK</div><div class="source">Kompas</div></div>
+  </div>
+  <div class="chart-bars">
+    <div class="bar-group"><div class="bar red" style="height:180px"><span class="val" style="color:#ef4444">−38%</span></div><div class="bar-label">Indonesia</div></div>
+    <div class="bar-group"><div class="bar yellow" style="height:70px"><span class="val" style="color:#eab308">−12%</span></div><div class="bar-label">India</div></div>
+    <div class="bar-group"><div class="bar gray" style="height:20px"><span class="val" style="color:#6b7280">−5%</span></div><div class="bar-label">Thailand</div></div>
+    <div class="bar-group"><div class="bar green" style="height:10px"><span class="val" style="color:#22c55e">+2,6%</span></div><div class="bar-label">Vietnam</div></div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(1)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(3)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:12.5%"></div>
+</div>
+
+<div id="slide3" class="slide-container hidden">
+  <span class="slide-number">03 / 16</span>
+  <span class="slide-section">BAGIAN 1 — FAKTA</span>
+  <div class="slide-title">BBCA Paling Dibuang, 19 Saham Terdepak dari MSCI</div>
+  <div class="slide-body">
+    Bukan saham gorengan yang dijual asing. <strong>BBCA</strong> — bank terbesar kita — justru paling banyak dibuang.
+    MSCI mengeluarkan <strong>19 saham Indonesia</strong>, 6 di antaranya dari MSCI Global Standard.
+  </div>
+  <div class="data-row">
+    <div class="data-card"><div class="label">Top Net Sell</div><div class="value">BBCA</div><div class="source">Kompas</div></div>
+    <div class="data-card"><div class="label">Saham RI di MSCI</div><div class="value red">19</div><div class="source">tereliminasi</div></div>
+    <div class="data-card"><div class="label">Surat MSCI</div><div class="value yellow">4 surat</div><div class="source">tenggat Mei 2026</div></div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(2)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(4)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:18.75%"></div>
+</div>
+
+<div id="slide4" class="slide-container hidden">
+  <span class="slide-number">04 / 16</span>
+  <span class="slide-section">BAGIAN 1 — FAKTA</span>
+  <div class="slide-title">Tiga Lembaga Rating, Tiga Sinyal Berbeda</div>
+  <div class="data-row">
+    <div class="data-card"><div class="label">Fitch</div><div class="value red">Outlook Negatif</div><div class="source">dari stable — 4 Mar 2026</div></div>
+    <div class="data-card"><div class="label">Moody's</div><div class="value yellow">Baa2 — Negatif</div><div class="source">Danantara — 3 Jun 2026</div></div>
+    <div class="data-card"><div class="label green">S&P</div><div class="value green">BBB — Stabil</div><div class="source">Danantara — 3 Jun 2026</div></div>
+  </div>
+  <div class="slide-body" style="margin-top:16px;font-size:15px;color:rgba(255,255,255,0.5)">
+    <em>"Kami tidak percaya bahwa dukungan pemerintah rentan terhadap risiko transisi."</em> — S&P Global, 3 Juni 2026
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(3)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(5)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:25%"></div>
+</div>
+
+<div id="slide5" class="slide-container hidden">
+  <span class="slide-number">05 / 16</span>
+  <span class="slide-section">BAGIAN 2 — TRIGGER DSI</span>
+  <div style="display:flex;align-items:center;gap:40px;max-width:90%">
+    <div style="flex:1">
+      <div class="slide-title">Ada yang Tidak Beres dengan DSI</div>
+      <div class="slide-body">
+        Bukan idenya yang salah. Pemerintah punya niat baik — <strong>kemandirian ekonomi</strong>, tidak tergantung pada asing.
+        Tapi cara mengumumkan dan mengeksekusinya... perlu diperbaiki.
+      </div>
+    </div>
+    <div style="width:180px;height:180px;border-radius:50%;border:2px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,0.02)">
+      <div style="text-align:center">
+        <div style="font-size:13px;color:rgba(255,255,255,0.2);letter-spacing:1px">DANANTARA</div>
+        <div style="font-size:48px;font-weight:800;color:#fff;line-height:1">DSI</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(4)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(6)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:31.25%"></div>
+</div>
+
+<div id="slide6" class="slide-container hidden">
+  <span class="slide-number">06 / 16</span>
+  <span class="slide-section">BAGIAN 2 — TRIGGER DSI</span>
+  <div class="slide-title">Kronologi 30 Hari</div>
+  <div class="slide-body" style="margin-bottom:8px">Dari nol ke BUMN dalam seminggu — dan target operasi mundur dua kali.</div>
+  <div class="timeline">
+    <div class="tl-node">
+      <div class="tl-dot"></div>
+      <div class="tl-date">20 Mei</div>
+      <div class="tl-event">Presiden umumkan DSI</div>
+      <div class="tl-detail">di DPR</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot blue"></div>
+      <div class="tl-date">25 Mei</div>
+      <div class="tl-event">Resmi jadi BUMN</div>
+      <div class="tl-detail">dalam 5 hari</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot yellow"></div>
+      <div class="tl-date">Awal target</div>
+      <div class="tl-event">1 September 2026</div>
+      <div class="tl-detail">operasi penuh</div>
+    </div>
+    <div class="tl-node">
+      <div class="tl-dot green"></div>
+      <div class="tl-date">Diundur</div>
+      <div class="tl-event">1 Januari 2027</div>
+      <div class="tl-detail">masa transisi</div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(5)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(7)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:37.5%"></div>
+</div>
+
+<div id="slide7" class="slide-container hidden">
+  <span class="slide-number">07 / 16</span>
+  <span class="slide-section">BAGIAN 2 — TRIGGER DSI</span>
+  <div class="slide-title">$908 Miliar yang Menggantung</div>
+  <div class="two-col">
+    <div class="col">
+      <div class="big-number red">$908B<span class="suffix">   USD</span><span class="sub">Rp15.400 triliun</span></div>
+    </div>
+    <div class="col">
+      <div class="slide-body">
+        Klaim Presiden: kerugian <strong>under-invoicing</strong> selama 34 tahun.
+        Angka besar — tapi metodologi <strong>tidak pernah dipublikasikan</strong>.
+        Bukan berarti salah — tapi ketidakjelasan adalah racun di pasar modal.
+      </div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Sumber: Kompas (20 Mei), Republika, Katadata</div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(6)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(8)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:43.75%"></div>
+</div>
+
+<div id="slide8" class="slide-container hidden">
+  <span class="slide-number">08 / 16</span>
+  <span class="slide-section">BAGIAN 2 — TRIGGER DSI</span>
+  <div class="slide-title">Dampak Nyata ke APBN</div>
+  <div class="slide-body">
+    Penerimaan negara — dari <strong>PPh</strong> dan <strong>bea keluar</strong> — terancam karena skema baru DSI.
+    Komisi XI DPR minta evaluasi dampak dalam <strong>3 bulan</strong>.
+    Bahkan DPR mengakui: dampak fiskal DSI belum sepenuhnya dipahami.
+  </div>
+  <div class="data-row">
+    <div class="data-card"><div class="label">DPR Minta</div><div class="value yellow">Evaluasi 3 Bulan</div><div class="source">dampak DSI ke APBN</div></div>
+    <div class="data-card"><div class="label">Skema Ekspor</div><div class="value">Masih Dibahas</div><div class="source">eksportir suplai data</div></div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(7)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(9)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:50%"></div>
+</div>
+
+<div id="slide9" class="slide-container hidden">
+  <span class="slide-number">09 / 16</span>
+  <span class="slide-section">BAGIAN 2 — TRIGGER DSI</span>
+  <div class="slide-title">Puncak Gunung Es: Trust Issue</div>
+  <div class="quote-block">
+    "Pelemahan IHSG bukan terletak pada fundamental ekonomi... melainkan kepercayaan investor asing terhadap arah kebijakan pemerintah... asing itu enggak trust dengan (pemerintah) kita."
+    <div class="attribution">— Hans Kwee, IDXChannel, 4 Juni 2026</div>
+  </div>
+  <div class="slide-body">
+    <strong>Bukan fundamental.</strong> Bukan data makro. Inflasi terkendali, APBN defisit 0,93% PDB.
+    Tapi <strong>trust</strong> — itulah yang hilang.
+    Dan trust, setelah hilang, butuh waktu untuk dibangun kembali.
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(8)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(10)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:56.25%"></div>
+</div>
+
+<div id="slide10" class="slide-container hidden">
+  <span class="slide-number">10 / 16</span>
+  <span class="slide-section">BAGIAN 3 — KONTEKS GLOBAL</span>
+  <div class="slide-title">Ini Tidak Terjadi di Ruang Hampa</div>
+  <div class="two-col">
+    <div class="col">
+      <div class="chart-bars" style="margin-top:0;height:160px">
+        <div class="bar-group"><div class="bar red" style="height:150px"><span class="val" style="color:#ef4444;font-size:11px">−38%</span></div><div class="bar-label">RI</div></div>
+        <div class="bar-group"><div class="bar yellow" style="height:58px"><span class="val" style="color:#eab308;font-size:11px">−12%</span></div><div class="bar-label">India</div></div>
+        <div class="bar-group"><div class="bar gray" style="height:16px"><span class="val" style="color:#6b7280;font-size:11px">−5%</span></div><div class="bar-label">Thai</div></div>
+        <div class="bar-group"><div class="bar green" style="height:8px"><span class="val" style="color:#22c55e;font-size:11px">+2,6%</span></div><div class="bar-label">Viet</div></div>
+      </div>
+    </div>
+    <div class="col">
+      <div class="slide-body">
+        Perang dagang AS-China memanas. Trump antitrust. Seluruh <strong>emerging market</strong> kena.
+        Tapi Indonesia paling parah karena ada <strong>tambahan masalah domestik</strong>.
+        Ibarat orang masuk angin, terus kehujanan.
+      </div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(9)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(11)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:62.5%"></div>
+</div>
+
+<div id="slide11" class="slide-container hidden">
+  <span class="slide-number">11 / 16</span>
+  <span class="slide-section">BAGIAN 3 — TITIK BALIK</span>
+  <div class="slide-title">Dari Suara Sumbang ke Koordinasi</div>
+  <div class="two-col">
+    <div class="col">
+      <div class="quote-block" style="font-size:17px;margin-top:0">
+        "Perbedaan pernyataan antarpejabat... asing itu enggak trust."
+        <div class="attribution">— Hans Kwee</div>
+      </div>
+      <div class="slide-body">
+        Tiga hari kemudian, <strong>6 Juni 2026</strong>: Purbaya, Perry, Prasetyo, Dasco duduk satu meja.
+      </div>
+    </div>
+    <div class="col">
+      <div class="data-row" style="margin-top:0">
+        <div class="data-card" style="min-width:100%">
+          <div class="label">2 JURUS DISEPAKATI</div>
+          <div style="margin-top:8px">
+            <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:15px;color:rgba(255,255,255,0.7)">❶ Naikkan daya tarik imbal hasil</div>
+            <div style="padding:8px 0;font-size:15px;color:rgba(255,255,255,0.7)">❷ Koordinasi fiskal-moneter diperkuat</div>
+          </div>
+          <div class="source">Detik — 6 Juni 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(10)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(12)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:68.75%"></div>
+</div>
+
+<div id="slide12" class="slide-container hidden">
+  <span class="slide-number">12 / 16</span>
+  <span class="slide-section">BAGIAN 3 — TITIK BALIK</span>
+  <div class="slide-title">8 Aksi Reformasi BEI</div>
+  <div class="slide-body">
+    BEI dan OJK meluncurkan <strong>8 aksi reformasi</strong> pasar modal untuk meyakinkan MSCI
+    bahwa Indonesia layak tetap di kelas <em>emerging market</em>. Tenggat: Mei 2026.
+    Bukan sekadar gengsi — keluar dari MSCI Emerging Market berarti <strong>arus dana keluar otomatis</strong>.
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:85%;margin-top:20px">
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❶ Likuiditas</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❷ Tata Kelola</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❸ Transparansi</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❹ Perlindungan Investor</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❺ Efisiensi Biaya</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❻ Teknologi</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❼ Regulasi</div>
+    <div style="padding:10px 14px;background:rgba(255,255,255,0.03);border-radius:8px;font-size:13px;color:rgba(255,255,255,0.6)">❽ Edukasi</div>
+  </div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.25);margin-top:12px">Sumber: Bisnis.com — 4 Juni 2026</div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(11)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(13)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:75%"></div>
+</div>
+
+<div id="slide13" class="slide-container hidden">
+  <span class="slide-number">13 / 16</span>
+  <span class="slide-section">BAGIAN 4 — JALAN KELUAR</span>
+  <div class="slide-title">Lima Langkah Perbaikan</div>
+  <div class="step-list">
+    <div class="step-item">
+      <div class="step-num">1</div>
+      <div class="step-text"><strong>White Paper DSI</strong> — Publikasikan skema lengkap, grandfather clause, metodologi $908B, governance DIM. S&P sudah kasih outlook stabil.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">2</div>
+      <div class="step-text"><strong>Satu Suara Pemerintah</strong> — Tunjuk satu jubir ekonomi. Hentikan kontradiksi publik antarpejabat.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">3</div>
+      <div class="step-text"><strong>Anchor Investor Domestik</strong> — Dividen BUMN $5–6M/tahun, sebagian jadi price support IHSG.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">4</div>
+      <div class="step-text"><strong>Panggil MSCI, Moody's, Fitch</strong> — Sampaikan action plan terukur. Bukan sekadar janji.</div>
+    </div>
+    <div class="step-item">
+      <div class="step-num">5</div>
+      <div class="step-text"><strong>Quick Win Proyek Danantara</strong> — Publikasikan 1–2 proyek bankable. Buktikan DSI bukan sekadar wacana.</div>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(12)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(14)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:81.25%"></div>
+</div>
+
+<div id="slide14" class="slide-container hidden">
+  <span class="slide-number">14 / 16</span>
+  <span class="slide-section">BAGIAN 4 — JALAN KELUAR</span>
+  <div class="slide-title">Target Realistis</div>
+  <div class="slide-body">
+    Q1 2026: defisit neraca modal & finansial <strong>−4.925 juta dolar AS</strong>.
+    Modal Rp65 triliun yang sudah kabur tidak akan balik dalam sebulan.
+  </div>
+  <div class="target-table">
+    <div class="target-card red">
+      <div class="period">Q3–Q4 2026</div>
+      <div class="goal">Hentikan outflow — dari net sell ke netral</div>
+    </div>
+    <div class="target-card green">
+      <div class="period">2027</div>
+      <div class="goal">Mulai inflow bertahap — stabilitas kebijakan + kredibilitas DSI</div>
+    </div>
+  </div>
+  <div style="font-size:13px;color:rgba(255,255,255,0.3);margin-top:16px;max-width:85%">
+    Rata-rata historis capital & financial account Indonesia: <strong>+4.603 juta USD</strong> (2010–2026). Tertinggi: +15.903 (Q4 2018). Terendah: −9.456 (Q3 20XX).
+    <br>— TradingEconomics
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(13)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(15)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:87.5%"></div>
+</div>
+
+<div id="slide15" class="slide-container hidden">
+  <span class="slide-number">15 / 16</span>
+  <span class="slide-section">BAGIAN 4 — PENUTUP</span>
+  <div class="slide-title">Bukan Akhir, Tapi Evaluasi</div>
+  <div class="slide-body" style="max-width:80%">
+    IHSG runtuh, DSI kontroversial, trust issue menggantung. Tapi ini bukan cerita tentang pemerintah yang bodoh.
+    Bukan juga cerita tentang pasar yang serakah.
+  </div>
+  <div class="slide-body" style="max-width:80%;margin-top:16px">
+    Ini cerita tentang <strong>kebijakan besar</strong> — sebuah lompatan menuju kemandirian ekonomi —
+    yang diumumkan di saat yang tidak tepat, dengan cara yang tidak tepat,
+    di tengah badai global yang sudah kencang.
+  </div>
+  <div class="slide-body" style="max-width:80%;margin-top:16px;color:rgba(255,255,255,0.5)">
+    Kabar baiknya: koordinasi mulai terbangun. S&P masih percaya. Reformasi MSCI sudah berjalan.
+    Yang dibutuhkan: <strong>konsistensi</strong>.
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(14)">← Sebelum</button>
+    <button class="nav-btn primary" onclick="go(16)">Selanjutnya →</button>
+  </div>
+  <div class="progress-bar" style="width:93.75%"></div>
+</div>
+
+<div id="slide16" class="slide-container hidden">
+  <span class="slide-number">16 / 16</span>
+  <span class="slide-section">PENUTUP</span>
+  <div style="text-align:center">
+    <div style="font-size:14px;color:rgba(255,255,255,0.2);letter-spacing:3px;text-transform:uppercase;margin-bottom:30px">— Akhir —</div>
+    <div class="closing-text">
+      Pada akhirnya, pertanyaan yang lebih jujur bukanlah "siapa yang salah?"
+      Tapi <strong style="color:#fff">apa yang tidak beres, dan bagaimana memperbaikinya?</strong>
+    </div>
+    <div style="width:60px;height:2px;background:rgba(255,255,255,0.1);margin:30px auto"></div>
+    <div class="closing-highlight">
+      Bukan Siapa yang Salah<br>
+      <span style="color:rgba(255,255,255,0.4);font-weight:300">Tapi</span>
+      <span style="color:#ef4444">Apa yang Bisa Diperbaiki</span>
+    </div>
+  </div>
+  <div class="nav-buttons">
+    <button class="nav-btn" onclick="go(15)">← Sebelum</button>
+    <button class="nav-btn" onclick="location.reload()">↺ Ulang</button>
+  </div>
+  <div class="progress-bar" style="width:100%"></div>
+</div>
+
+<script>
+let current = 1;
+function go(n) {
+  document.getElementById('slide' + current).classList.add('hidden');
+  document.getElementById('slide' + n).classList.remove('hidden');
+  current = n;
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    if (document.getElementById('slide' + current).querySelector('.nav-btn.primary')) {
+      document.querySelector('#slide' + current + ' .nav-btn.primary').click();
+    }
+  }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+    e.preventDefault();
+    const prev = document.querySelector('#slide' + current + ' .nav-btn:not(.primary)');
+    if (prev) prev.click();
+  }
+});
+</script>
+</body>
+</html>
