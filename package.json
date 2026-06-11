@@ -1,12 +1,25 @@
 {
-  "name": "hermes-webui-devtools",
+  "name": "hermes-alpine",
   "version": "1.0.0",
   "private": true,
-  "description": "Dev-only tooling for hermes-webui. NOT a build step — the app remains pure Python + vanilla JS with no bundler. The only dependency is ESLint, used solely as a runtime-error guard over static/*.js (catches brick-class bugs like #3162 const-reassignment that node --check and source-presence tests miss). See TESTING.md > 'Static JS runtime lint'.",
+  "description": "Hermes Agent ecosystem: hermes-agent + skills + plugins, ported to Alpine Linux",
   "scripts": {
-    "lint:runtime": "eslint --no-config-lookup -c eslint.runtime-guard.config.mjs \"static/**/*.js\""
+    "lint:runtime": "eslint --no-config-lookup -c eslint.runtime-guard.config.mjs \"static/**/*.js\"",
+    "postinstall": "npm rebuild better-sqlite3"
+  },
+  "dependencies": {
+    "@agentmemory/agentmemory": "^0.9.22",
+    "@colbymchenry/codegraph": "^0.9.9",
+    "@notionhq/notion-mcp-server": "^2.2.1",
+    "superlocalmemory": "^3.5.7"
   },
   "devDependencies": {
     "eslint": "^10.4.0"
+  },
+  "optionalDependencies": {
+    "better-sqlite3": "^12.6.2"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
