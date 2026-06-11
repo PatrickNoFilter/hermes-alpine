@@ -265,6 +265,73 @@ if [ "$CHECK_MCP" = true ]; then
 fi
 
 # ============================================================================
+# System Integrations Check
+# ============================================================================
+echo "--- System Integrations ---"
+
+# Check npm MCP packages
+for pkg in "@notionhq/notion-mcp-server" "superlocalmemory" "context-mode" "@colbymchenry/codegraph"; do
+    if npm list -g --depth=0 2>/dev/null | grep -q "$pkg"; then
+        pass
+        if [ "$VERBOSE" = true ]; then
+            ok "npm MCP: $pkg installed"
+        fi
+    else
+        warn "npm MCP: $pkg not installed"
+    fi
+done
+
+# Check Python packages
+for pkg in "scrapling" "onex"; do
+    if pip3 show "$pkg" >/dev/null 2>&1; then
+        pass
+        if [ "$VERBOSE" = true ]; then
+            ok "Python: $pkg installed"
+        fi
+    else
+        warn "Python: $pkg not installed"
+    fi
+done
+
+# Check firecrawl JS SDK
+if npm list -g --depth=0 2>/dev/null | grep -q "firecrawl"; then
+    pass
+    if [ "$VERBOSE" = true ]; then ok "npm: firecrawl SDK installed"; fi
+else
+    warn "npm: firecrawl SDK not installed"
+fi
+
+# Check git repos
+for repo_dir in "$HOME/freellmapi" "$HOME/CloakBrowser"; do
+    if [ -d "$repo_dir" ]; then
+        pass
+        if [ "$VERBOSE" = true ]; then
+            ok "Git: $(basename "$repo_dir") cloned"
+        fi
+    else
+        warn "Git: $(basename "$repo_dir") not cloned"
+    fi
+done
+
+# Check wrapper scripts presence
+for script_name in notion-mcp.sh slm-mcp.sh firecrawl-mcp.sh; do
+    if [ -f "$HERMES_HOME/scripts/$script_name" ]; then
+        if [ -x "$HERMES_HOME/scripts/$script_name" ]; then
+            pass
+            if [ "$VERBOSE" = true ]; then
+                ok "Wrapper: $script_name present and executable"
+            fi
+        else
+            warn "Wrapper: $script_name not executable"
+        fi
+    else
+        warn "Wrapper: $script_name not found in $HERMES_HOME/scripts/"
+    fi
+done
+
+echo ""
+
+# ============================================================================
 # Scripts Check
 # ============================================================================
 echo "--- Ecosystem Scripts ---"
@@ -274,7 +341,11 @@ for script in \
     scripts/install-plugins.sh \
     scripts/configure-mcp.py \
     scripts/verify-integration.sh \
-    scripts/update-external.sh; do
+    scripts/update-external.sh \
+    scripts/install-system-integrations.sh \
+    scripts/notion-mcp.sh \
+    scripts/slm-mcp.sh \
+    scripts/firecrawl-mcp.sh; do
     if [ -f "$REPO_ROOT/$script" ]; then
         if [ -x "$REPO_ROOT/$script" ] || [[ "$script" == *.py ]]; then
             pass

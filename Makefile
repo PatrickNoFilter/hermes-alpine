@@ -8,9 +8,10 @@
 #   install-skills   Symlink skills from skills/ to ~/.hermes/skills/
 #   install-plugins  Symlink plugins from plugins/ to ~/.hermes/plugins/
 #   configure-mcp    Merge MCP server config into ~/.hermes/config.yaml
+#   integrate        Install full ecosystem (npm MCP, pip, git, wrappers)
 #   verify           Verify ecosystem integration
 #   update-external  Update npm packages, Python MCP deps, RTK
-#   bootstrap        Quick bootstrap: install + api keys prompt + verify
+#   bootstrap        Quick bootstrap: install + integrate + verify
 #   help             Show this help
 # ============================================================================
 
@@ -21,7 +22,7 @@ SCRIPT_DIR := scripts
 HERMES_HOME := $(or $(HERMES_HOME),$(HOME)/.hermes)
 
 .PHONY: help install install-deps install-agent \
-        install-skills install-plugins configure-mcp verify \
+        install-skills install-plugins configure-mcp integrate verify \
         update-external bootstrap
 
 help:
@@ -34,18 +35,23 @@ help:
 	@echo "  make install-skills   Symlink skills to ~/.hermes/skills/"
 	@echo "  make install-plugins  Symlink plugins to ~/.hermes/plugins/"
 	@echo "  make configure-mcp    Merge MCP servers into config.yaml"
+	@echo "  make integrate        Install full ecosystem (npm, pip, git)"
 	@echo "  make verify           Check integration status"
 	@echo "  make update-external  Update npm + Python MCP + RTK"
-	@echo "  make bootstrap        Install + configure + verify"
+	@echo "  make bootstrap        Install + integrate + verify"
 	@echo ""
 
 # ---- Top-level targets ----
 
 install: install-deps install-agent install-skills install-plugins configure-mcp
 	@echo ""
-	@echo "✓ Full install complete. Run 'make verify' to check."
+	@echo "✓ Full install complete. Run 'make integrate' for MCP+npm+git deps."
 
-bootstrap: install
+integrate: configure-mcp
+	@echo "=== Installing system integrations ==="
+	@bash $(SCRIPT_DIR)/install-system-integrations.sh
+
+bootstrap: install integrate
 	@echo ""
 	@echo "=== Bootstrap: Verification ==="
 	@$(SCRIPT_DIR)/verify-integration.sh || true

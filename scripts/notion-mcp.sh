@@ -1,7 +1,13 @@
-#!/bin/bash
-set -a
-. /root/.hermes/.env 2>/dev/null || true
-set +a
-# MCP server reads NOTION_TOKEN — map NOTION_API_KEY to it
-export NOTION_TOKEN="${NOTION_API_KEY}"
-exec node /tmp/node_modules/@notionhq/notion-mcp-server/bin/cli.mjs "$@"
+#!/bin/sh
+# Wrapper for @notionhq/notion-mcp-server
+# Reads NOTION_API_KEY from .env and passes it as NOTION_TOKEN
+
+ENV_FILE="${HOME}/.hermes/.env"
+
+if [ -f "$ENV_FILE" ]; then
+    eval "$(grep '^NOTION_API_KEY=' "$ENV_FILE" | sed 's/^export //')"
+fi
+
+export NOTION_TOKEN="${NOTION_TOKEN:-$NOTION_API_KEY}"
+
+exec /usr/bin/env node /usr/local/lib/node_modules/@notionhq/notion-mcp-server/dist/index.js "$@"
