@@ -2,20 +2,28 @@
 # =============================================================================
 # Hermes Ecosystem — One-shot installer
 # =============================================================================
-# Installs the entire Hermes ecosystem in correct dependency order:
-#   1. System build dependencies (Alpine / Debian/Ubuntu / Fedora)
-#   2. Node.js runtime (if missing or old)
+# Installs the entire Hermes ecosystem in correct dependency order.
+# Works two ways:
+#   A) Piped from GitHub:  curl -fsSL .../setup-ecosystem.sh | bash
+#      (script auto-fetches its sibling files from GitHub)
+#   B) From cloned repo:  ./scripts/setup-ecosystem.sh
+#      (uses local files)
+#
+# Dependency order:
+#   1. System build deps (Alpine / Debian / Fedora / Arch, auto-detected)
+#   2. Node.js runtime
 #   3. Python venv + pip + build toolchain
-#   4. Python runtime dependencies (requirements.txt)
-#   5. Python MCP package (requirements-mcp.txt)
-#   6. npm production dependencies (package.json)
-#   7. npm optional: better-sqlite3 rebuild
-#   8. Hermes Python package (editable)
+#   4. Python runtime dependencies
+#   5. Python MCP package
+#   6. npm production dependencies
+#   7. Hermes Python package (editable)
 # =============================================================================
 
 set -e
 
-HERMES_SRC="${HERMES_SRC:-$(cd "$(dirname "$0")" && pwd)}"
+REPO_URL="${REPO_URL:-https://raw.githubusercontent.com/PatrickNoFilter/hermes-alpine/main}"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+HERMES_SRC="${HERMES_SRC:-$SCRIPT_DIR}"
 VENV="${VENV:-$HERMES_SRC/venv}"
 
 echo "=========================================="
@@ -24,6 +32,32 @@ echo "=========================================="
 echo "  HERMES_SRC : $HERMES_SRC"
 echo "  VENV       : $VENV"
 echo ""
+
+# =============================================================================
+# Helper: fetch a file from REPO_URL if it doesn't exist locally
+# =============================================================================
+fetch_if_missing() {
+    local src="$1"
+    local dst="$HERMES_SRC/$(basename "$src")"
+    if [ ! -f "$dst" ]; then
+        echo "▸ Fetching $src"
+        curl -fsSL "$REPO_URL/$src" -o "$dst"
+    fi
+}
+
+# =============================================================================
+# If running via pipe (no local files), create a working dir and fetch all files
+# =============================================================================
+if [ ! -f "$HERMES_SRC/package.json" ] && [ ! -f "$HERMES_SRC/requirements.txt" ]; then
+    echo "▸ No local repo detected — fetching files from GitHub..."
+    mkdir -p "$HERMES_SRC"
+    fetch_if_missing "requirements.txt"
+    fetch_if_missing "requirements-mcp.txt"
+    fetch_if_missing "package.json"
+    fetch_if_missing "pyproject.toml"
+    fetch_if_missing "config.yaml.example"
+    echo ""
+fi
 
 # =============================================================================
 # Step 0: Detect OS
@@ -122,12 +156,6 @@ NODE_VERSION=$(node --version 2>/dev/null || echo "none")
 NPM_VERSION=$(npm --version 2>/dev/null || echo "none")
 echo "▸ Node $NODE_VERSION / npm $NPM_VERSION"
 
-if [ "$NODE_VERSION" = "none" ] || [ "$NODE_VERSION" \< "v18" ]; then
-    echo "⚠  Node.js missing or too old. Install Node.js 18+ and re-run."
-    echo "   On Alpine:  apk add nodejs npm"
-    echo "   On Debian:  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -"
-fi
-
 # =============================================================================
 # Step 3: Python venv
 # =============================================================================
@@ -195,8 +223,6 @@ if [ -f "$HERMES_SRC/package.json" ]; then
     echo "▸ Installing npm packages from $HERMES_SRC/package.json"
     cd "$HERMES_SRC"
     npm install --omit=dev
-    echo "▸ Running postinstall (native module rebuild)..."
-    npm rebuild better-sqlite3 || true
     echo "▸ npm install complete"
 else
     echo "▸ $HERMES_SRC/package.json not found — skipping"
@@ -224,6 +250,7 @@ echo "  ✓ Ecosystem install complete"
 echo "=========================================="
 echo ""
 echo "Next steps:"
-echo "  1. Copy config.yaml.example → config.yaml and add your API keys"
+echo "  1. cp $HERMES_SRC/config.yaml.example ~/.hermes/config.yaml"
+echo "     then add your API keys to ~/.hermes/config.yaml"
 echo "  2. Activate venv:  source $VENV/bin/activate"
-echo "  3. Start Hermes:  hermes"
+echo "  3. Start Hermes:   hermes"
