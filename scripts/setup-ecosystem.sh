@@ -247,6 +247,13 @@ echo ""
 echo "=== Step 8: Hermes Agent (editable) ==="
 
 if [ -f "$HERMES_AGENT_DIR/pyproject.toml" ]; then
+    # Widen requires-python to allow Python 3.14 (Alpine ships 3.14).
+    # hermes-agent caps at <3.14 to avoid pydantic-core cp314 wheel gaps, but
+    # Alpine has Rust + cargo so source builds work fine.
+    echo "▸ Patching requires-python to allow Python 3.14+"
+    sed -i 's/requires-python = ">=3.11,<3.14"/requires-python = ">=3.11"/' \
+        "$HERMES_AGENT_DIR/pyproject.toml"
+
     echo "▸ Installing hermes-agent (editable)"
     pip install -e "$HERMES_AGENT_DIR"
     HERMES_CLI="$HERMES_AGENT_DIR/cli.py"
