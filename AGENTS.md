@@ -1,80 +1,69 @@
-# Agent instructions for Hermes WebUI
+# AGENTS.md — Agent instructions for hermes-alpine
 
 This file is the shared entry point for AI assistants working in this
-repository. Keep it project-specific and safe to publish. Do not put personal
-machine setup, private network details, credentials, tokens, or local-only
-workflow notes here.
+repository. Keep it project-specific and safe to publish.
 
 ## Read first
 
 Before making changes, read:
 
-1. `README.md`
-2. `CONTRIBUTING.md`
-3. `docs/CONTRACTS.md`
-4. `CHANGELOG.md`
+1. `README.md` — overview, architecture, counts, quick start
+2. `CONTRIBUTING.md` — contributor workflow, PR expectations
+3. `ARCHITECTURE.md` — design decisions, file inventory, constraints
 
-For architecture, testing, or setup work, also read the matching reference:
+## Project overview
 
-- `ARCHITECTURE.md` for design constraints and current module layout
-- `TESTING.md` for local verification commands and manual test guidance
-- `docs/onboarding.md` for first-run onboarding behavior
-- `docs/troubleshooting.md` for diagnostic flows
-- `docs/rfcs/README.md` for larger RFCs and state/durability contracts
+`hermes-alpine` packages the Hermes Agent ecosystem for Alpine Linux (and other
+distros). It provides:
 
-For UI or UX work, read `docs/UIUX-GUIDE.md` and `DESIGN.md` before
-changing layout, interaction flow, themes, chat rendering, or composer chrome.
+- **129 skills** organized under 19 categories + 22 standalone skills
+- **2 plugins** (hermes-lcm, rtk-rewrite)
+- **5 MCP server** configurations
+- **One-shot installer** (`setup-ecosystem.sh`) that detects the distro and
+  installs everything
 
-## Onboarding and reinstall support
+Key constraint: this repo ships what users install. Every script should work
+on Alpine Linux (apk), Debian/Ubuntu (apt), Fedora (dnf), and Arch (pacman).
 
-If the task involves install, reinstall, bootstrap, first-run onboarding,
-provider setup, local model server setup, Docker onboarding, WSL onboarding, or
-support for a failed first run, read `docs/onboarding-agent-checklist.md`
-before running commands or inspecting logs.
+## Conventions
 
-Follow that checklist's safety rules:
+- Skills live in `skills/<category>/<name>/SKILL.md` or `skills/<name>/SKILL.md`
+  for standalone skills. The install-skills.sh script symlinks them to
+  `~/.hermes/skills/` preserving the category structure.
+- Plugins live in `plugins/<name>/` with a `plugin.yaml` manifest and
+  `__init__.py`. install-plugins.sh symlinks them to `~/.hermes/plugins/`.
+- MCP server definitions go in `config.yaml.example` (the canonical source)
+  and are merged into the user's `~/.hermes/config.yaml` by `configure-mcp.py`.
+- Shell scripts must work with both bash and sh (Alpine uses BusyBox ash).
+- Python scripts target Python 3.11+ (no walrus operator or 3.12-only features
+  unless a version guard exists).
 
-- use isolated `HERMES_HOME` and `HERMES_WEBUI_STATE_DIR` for trials unless the
-  human explicitly asks to use real state
-- do not delete or overwrite a real `~/.hermes` directory without explicit
-  approval
-- do not print API keys, OAuth tokens, cookies, full `.env` files, full
-  `auth.json` files, or password hashes
-- collect non-secret status and log evidence before recommending a fix
+## When adding new content
 
-## Contribution style
+- **Adding a skill**: Add `skills/<category>/<name>/SKILL.md` following the
+  Hermes Agent skill format (YAML frontmatter with name, description, tools,
+  then markdown body). Update the skill count in README.md if needed.
+- **Adding a plugin**: Add `plugins/<name>/` with `plugin.yaml` and
+  `__init__.py`. Update README.md plugin reference.
+- **Adding an MCP server**: Add the server config block below the
+  `mcp_servers:` key in `config.yaml.example`. Add it to
+  `ECOSYSTEM_MCP_SERVERS` in `scripts/configure-mcp.py`. Update README.md
+  MCP server table.
+- **Adding a dependency**: Update `package.json`, `requirements.txt`, or
+  `requirements-mcp.txt` as appropriate. Update `setup-ecosystem.sh` if the
+  new dep needs installation steps.
 
-- Keep one logical change per PR; split unrelated refactors or cleanup.
-- Read `docs/CONTRACTS.md` and the linked contract/RFC for the touched
-  subsystem before editing.
-- Prefer the existing Python + vanilla JavaScript structure. Do not add
-  dependencies, build tools, frameworks, or long-lived processes without clear
-  justification and a rollback story.
-- Update docs when changing setup, onboarding, runtime behavior, architecture,
-  testing guidance, or user-facing workflows.
-- Update `CHANGELOG.md` for user-visible behavior, setup, workflow, or
-  documentation changes that should be release-note ready.
-- For UI or UX changes, include before/after evidence and test relevant
-  desktop, narrow, and mobile states.
-- For behavior changes, add or update automated tests where practical and list
-  the manual verification performed.
-- For runtime, streaming, recovery, replay, compression, or sidebar metadata
-  changes, name the state layer being mutated and prove the relevant invariant.
+## Testing before commit
 
-## Local state and secrets
-
-Hermes WebUI can read and write real agent state, sessions, workspaces,
-credentials, and cron data. Treat local validation as potentially destructive
-unless you have confirmed the active state directories.
-
-Prefer isolated trial state for experiments:
-
-```bash
-HERMES_HOME=/tmp/hermes-webui-agent-home \
-HERMES_WEBUI_STATE_DIR=/tmp/hermes-webui-agent-state \
-HERMES_WEBUI_PORT=8789 \
-python3 bootstrap.py
+```sh
+make verify                  # All checks must pass
+bash scripts/install-skills.sh --dry-run   # Verify skill links
+bash scripts/install-plugins.sh --dry-run  # Verify plugin links
+python3 scripts/configure-mcp.py --dry-run  # Verify MCP merge
 ```
 
-Do not include private machine instructions in this tracked file. Use a
-git-ignored local note for personal workflow details.
+## Reporting changes
+
+- Keep one logical change per PR
+- Update `CHANGELOG.md` for user-visible changes (new skills, scripts, fixes)
+- Never commit `config.yaml`, `.env`, or files with live credentials

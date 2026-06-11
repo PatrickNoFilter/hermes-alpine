@@ -1,0 +1,66 @@
+name: bug_report
+description: File a bug report to help improve hermes-alpine
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report.
+  - type: input
+    id: distro
+    attributes:
+      label: Distribution / Environment
+      description: What OS and environment are you running on?
+      placeholder: "Alpine 3.21, Debian 12, Ubuntu 24.04, Fedora 41, Arch, Termux/PRoot"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: hermes-alpine version
+      description: Git commit or tag you're on
+      placeholder: "main@abc1234 or v1.0.0"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the issue, including the exact command you ran and the error output.
+      placeholder: "When I run setup-ecosystem.sh, I get..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Paste any relevant terminal output or log excerpts. This will be auto-formatted.
+      render: shell
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the ecosystem is affected?
+      options:
+        - setup-ecosystem.sh (installer)
+        - install-skills.sh
+        - install-plugins.sh
+        - configure-mcp.py
+        - verify-integration.sh
+        - update-external.sh
+        - Skills (specific skill loading)
+        - Plugins (hermes-lcm / rtk-rewrite)
+        - MCP server config
+        - Makefile
+        - Docker / docker-compose
+        - Documentation
+        - Other
+    validations:
+      required: true

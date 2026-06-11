@@ -267,6 +267,57 @@ else
 fi
 
 # =============================================================================
+# Step 9: Install ecosystem skills into HERMES_HOME
+# =============================================================================
+echo ""
+echo "=== Step 9: Install ecosystem skills ==="
+
+SKILLS_SCRIPT="$SCRIPT_DIR/install-skills.sh"
+if [ -f "$SKILLS_SCRIPT" ]; then
+    echo "▸ Installing skills from skills/ to ~/.hermes/skills/..."
+    bash "$SKILLS_SCRIPT" --symlink
+else
+    echo "▸ $SKILLS_SCRIPT not found — skipping skill installation"
+    echo "  (You can run scripts/install-skills.sh later)"
+fi
+
+# =============================================================================
+# Step 10: Install ecosystem plugins into HERMES_HOME
+# =============================================================================
+echo ""
+echo "=== Step 10: Install ecosystem plugins ==="
+
+PLUGINS_SCRIPT="$SCRIPT_DIR/install-plugins.sh"
+if [ -f "$PLUGINS_SCRIPT" ]; then
+    echo "▸ Installing plugins from plugins/ to ~/.hermes/plugins/..."
+    bash "$PLUGINS_SCRIPT" --symlink
+else
+    echo "▸ $PLUGINS_SCRIPT not found — skipping plugin installation"
+    echo "  (You can run scripts/install-plugins.sh later)"
+fi
+
+# =============================================================================
+# Step 11: Configure MCP servers
+# =============================================================================
+echo ""
+echo "=== Step 11: Configure MCP servers ==="
+
+if [ -f "$HERMES_HOME/config.yaml" ]; then
+    MCP_SCRIPT="$SCRIPT_DIR/configure-mcp.py"
+    if [ -f "$MCP_SCRIPT" ]; then
+        echo "▸ Merging ecosystem MCP servers into $HERMES_HOME/config.yaml..."
+        python3 "$MCP_SCRIPT" --dry-run 2>&1 | head -20 || true
+        python3 "$MCP_SCRIPT" 2>&1
+    else
+        echo "▸ $MCP_SCRIPT not found — skipping MCP configuration"
+        echo "  (You can run scripts/configure-mcp.py later)"
+    fi
+else
+    echo "▸ $HERMES_HOME/config.yaml not found — skipping MCP configuration"
+    echo "  After creating config.yaml, run: python3 scripts/configure-mcp.py"
+fi
+
+# =============================================================================
 # Done
 # =============================================================================
 echo ""
@@ -274,10 +325,24 @@ echo "=========================================="
 echo "  ✓ Ecosystem install complete"
 echo "=========================================="
 echo ""
+echo "Ecosystem components installed:"
+echo "  - Hermes Agent (upstream, editable install)"
+echo "  - Python + MCP dependencies"
+echo "  - npm MCP packages"
+echo "  - 137+ skills (symlinked to ~/.hermes/skills/)"
+echo "  - 2 plugins (symlinked to ~/.hermes/plugins/)"
+echo "  - 5 MCP servers (configured in config.yaml)"
+echo "  - Ecosystem wrapper scripts (scripts/)"
+echo ""
 echo "Next steps:"
-echo "  1. cp $HERMES_SRC/config.yaml.example ~/.hermes/config.yaml"
-echo "     then add your API keys to ~/.hermes/config.yaml"
-echo "  2. Add to PATH:  export PATH=\"\$HOME/.local/bin:\$PATH\""
+echo "  1. If you didn't have a config.yaml, copy the example:"
+echo "       cp $HERMES_SRC/config.yaml.example ~/.hermes/config.yaml"
+echo "     then configure MCP servers:"
+echo "       python3 $SCRIPT_DIR/configure-mcp.py"
+echo "  2. Add API keys to ~/.hermes/.env or config.yaml"
+echo "  3. Add to PATH:  export PATH=\"\$HOME/.local/bin:\$PATH\""
 echo "     (add to ~/.bashrc to persist)"
-echo "  3. Activate venv:  source $VENV/bin/activate"
-echo "  4. Start Hermes:   hermes"
+echo "  4. Activate venv:  source $VENV/bin/activate"
+echo "  5. Start Hermes:   hermes"
+echo "  6. Verify integration:"
+echo "       bash $SCRIPT_DIR/verify-integration.sh"

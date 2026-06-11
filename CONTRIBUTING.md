@@ -1,205 +1,128 @@
-# Contributing to Hermes WebUI
+# Contributing to hermes-alpine
 
-Thanks for contributing.
+Thanks for your interest! This document covers the contributor workflow and
+expectations.
 
-Hermes WebUI is intentionally simple to work on: Python on the server, vanilla JS in the browser, no build step, no bundler, no frontend framework. The best pull requests preserve that simplicity while solving a real problem cleanly.
+## Quick start
 
-## Before You Start
-
-- Read [`AGENTS.md`](AGENTS.md) if an AI assistant is doing or helping with the
-  change.
-- Read [`docs/CONTRACTS.md`](docs/CONTRACTS.md) and any linked contract/RFC for
-  the subsystem you will touch.
-- For UI or UX work, read [`docs/UIUX-GUIDE.md`](docs/UIUX-GUIDE.md)
-  and [`DESIGN.md`](DESIGN.md).
-- For runtime, streaming, recovery, replay, compression, context reconstruction,
-  or session metadata work, start with [`docs/rfcs/README.md`](docs/rfcs/README.md)
-  and the relevant RFC listed there.
-
-Use those documents as review guardrails: keep the change scoped, preserve the
-no-build-step architecture, update docs/changelog when behavior changes, include
-UI evidence for UI changes, and add tests for behavior changes where practical.
-
-### Contract-affecting PRs
-
-A contract-affecting PR is any change that updates a public contract document,
-an RFC, a contributor guide, a product-semantics test, or behavior that those
-documents already describe. These PRs need an explicit `Contract Routing` section
-in the PR body that names the touched contract family and the evidence used.
-See [`docs/CONTRACTS.md#contract-routing`](docs/CONTRACTS.md#contract-routing)
-for the short routing shape and [`docs/CONTRACTS.md#contract-changes`](docs/CONTRACTS.md#contract-changes)
-for intentional contract changes.
-
-If the PR intentionally changes an existing contract, add a `Contract Change`
-section that states the old rule, the new rule, and why the change is justified.
-Do not silently redefine product behavior by changing tests alone; update the
-corresponding docs in the same PR.
-
-A release batch should call out included contract-affecting PRs separately
-from ordinary fixes, even when the code diff is small and CI is green.
-
-## Two Paths to a Strong Pull Request
-
-### Path 1: Small, Focused Changes
-
-This is the fastest path to review and merge.
-
-- Fix one clear bug or add one tightly scoped improvement
-- Touch the fewest files you can
-- Avoid drive-by refactors mixed into functional changes
-- Run the relevant tests locally before opening the PR
-- Keep the PR description concise and specific
-
-These are the changes that are easiest to review and safest to merge quickly.
-
-### Path 2: Bigger Changes
-
-If you want to change architecture, reshape a workflow, add a substantial UI feature, or alter core behavior, align on direction first.
-
-- Open an issue, start a discussion, or open a draft PR early
-- Explain the problem you are solving, not just the implementation you want
-- Call out tradeoffs, migration risk, and any alternatives you considered
-- Keep the final PR easy to review by separating unrelated work
-
-Large changes are welcome, but surprise rewrites are hard to review well.
-
-## What We Expect in Every PR
-
-### 1. One Logical Change Per PR
-
-Keep each PR focused. A small related group of fixes is fine. A bug fix plus a CSS cleanup plus a refactor plus a docs rewrite is not.
-
-### 2. Local Verification
-
-Run the test suite locally:
-
-```bash
-pytest tests/ -v --timeout=60
+```sh
+git clone https://github.com/PatrickNoFilter/hermes-alpine.git
+cd hermes-alpine
+make verify
 ```
 
-CI also runs this suite on Python `3.11`, `3.12`, and `3.13`.
+## Reporting issues
 
-If your change affects browser behavior, also run the relevant manual checks from [TESTING.md](TESTING.md).
+Use one of the issue templates:
 
-### 3. Clear PR Description
-
-There is currently no PR template in this repo, so include the important sections yourself:
-
-- Thinking Path
-- What Changed
-- Why It Matters
-- Verification
-- Risks / Follow-ups
-- Model Used
-
-If the change is user-visible, include screenshots or a short video.
-
-For UI or UX changes, before/after images are required. PRs that change the interface or interaction flow without before/after images may not receive meaningful review until that evidence is added.
-
-### 4. AI Usage Disclosure
-
-If AI helped produce the change, say so in the PR description.
+- **Bug report** — something doesn't work on your distro
+- **Feature request** — idea for a new capability
+- **Skill request** — propose adding a new Hermes skill to the repo
 
 Include:
+- Your distro and version (Alpine 3.21, Debian 12, etc.)
+- The exact command you ran and its output
+- For setup bugs: paste the full terminal output (use `<details>` in the issue)
 
-- Provider
-- Exact model name or ID
-- Any notable mode or tool use that mattered
+## Submitting changes
 
-If no AI was used, write: `None — human-authored`.
+### Branching
 
-### 5. Keep the Docs Honest
+```sh
+git checkout -b fix/description   # bug fix
+git checkout -b feat/description  # new feature
+git checkout -b skill/name        # new skill
+git checkout -b docs/description  # documentation
+```
 
-If your change alters behavior, architecture, testing, setup, or user-facing workflows, update the relevant docs in the same PR.
+### Before opening a PR
 
-Common files:
+```sh
+make verify                              # Must pass with 0 warnings
+bash scripts/install-skills.sh --dry-run # Check skill links
+bash scripts/install-plugins.sh --dry-run# Check plugin links
+python3 scripts/configure-mcp.py --dry-run # Check MCP merge
+shellcheck scripts/*.sh                  # Lint shell scripts
+ruff check scripts/*.py                  # Lint Python scripts
+```
 
-- [README.md](README.md) for setup, usage, and contributor-facing commands
-- [ROADMAP.md](ROADMAP.md) for shipped features and sprint history
-- [ARCHITECTURE.md](ARCHITECTURE.md) for implementation details and design constraints
-- [TESTING.md](TESTING.md) for manual and automated verification guidance
-- [CHANGELOG.md](CHANGELOG.md) when maintainers want release-note-ready entries
+### PR requirements
 
-## Project-Specific Guidelines
+1. One logical change per PR. Split unrelated changes.
+2. Update `README.md` if adding skills, plugins, or MCP servers.
+3. Update skill counts in README if adding/removing skills.
+4. Update `CHANGELOG.md` for user-visible changes.
+5. PR template must be filled out completely.
+6. CI must pass (lint, validation, config checks).
 
-### Preserve the Design Constraints
+## Adding skills
 
-Hermes WebUI is deliberately:
+1. Create `skills/<category>/<name>/SKILL.md` (or `skills/<name>/SKILL.md`
+   for standalone skills without a category).
+2. Follow the Hermes Agent skill format: YAML frontmatter with `name`,
+   `description`, optional `toolsets`, then markdown body.
+3. Run `bash scripts/install-skills.sh --dry-run` to verify it's picked up.
+4. Update the skill count in `README.md` if this changes the total.
+5. Update the category table in `README.md` if adding a new category.
+6. Commit with message: `skill: add <name> (<category>)`
 
-- No build step
-- No bundler
-- No frontend framework
-- Easy to modify from a terminal
+## Adding plugins
 
-Do not introduce new infrastructure or dependencies unless the gain is clear and the tradeoff is justified.
+1. Create `plugins/<name>/` with:
+   - `plugin.yaml` — Hermes plugin manifest (name, version, description)
+   - `__init__.py` — plugin entry point with hook functions
+2. The plugin entry point can define:
+   - `on_load()` — called when plugin is loaded
+   - `pre_tool_call(tool_name, kwargs)` — hook before tool exec
+   - `post_tool_call(tool_name, kwargs, result)` — hook after tool exec
+3. Run `bash scripts/install-plugins.sh --dry-run` to verify.
+4. Update the plugin reference section in `README.md`.
+5. Commit with message: `plugin: add <name>`
 
-### Match the Existing Shape of the Codebase
+## Adding MCP servers
 
-- Server logic belongs in `api/` with `server.py` staying thin
-- Frontend behavior belongs in the existing `static/*.js` modules
-- Prefer extending current patterns over introducing parallel abstractions
-- Keep changes legible to future contributors working directly from the repo in a terminal
+1. Add the server config block under `mcp_servers:` in `config.yaml.example`.
+2. Add the server name to the `ECOSYSTEM_MCP_SERVERS` set in
+   `scripts/configure-mcp.py`.
+3. If the server needs a wrapper script (bash/node/python), add it to
+   `scripts/` and update `notion-mcp.sh` or `slm-mcp.sh` as a pattern.
+4. Update the MCP server table in `README.md`.
+5. Run `python3 scripts/configure-mcp.py --dry-run` to verify merge.
+6. Commit with message: `mcp: add <name> server`
 
-### Be Careful With User-Facing Changes
+## Code style
 
-This project is heavily UI-driven. If you change interaction flows, session behavior, workspace browsing, onboarding, or mobile layouts:
+### Shell scripts
 
-- test the happy path
-- test reload behavior where relevant
-- test narrow/mobile layouts where relevant
-- include before/after images in the PR
+- Target POSIX sh (ash on Alpine). Avoid bashisms:
+  - Use `[ ]` not `[[ ]]`
+  - Use `=` not `==` for string comparison
+  - Use `$(...)` not backticks
+  - Use `printf` for formatted output
+  - Use `read -r` for reading lines
+  - No arrays (`${arr[@]}`)
+  - No `<<<` heredocs
+- Use `set -e` for fatal errors, `|| true` for non-fatal
+- Prefer `--dry-run` support in all destructive scripts
+- Use `$HOME` over `~` for portability
 
-### Security and Safety Matter
+### Python scripts
 
-This app can expose workspace contents, run agent actions, and optionally sit behind a reverse proxy or Docker deployment. Treat auth, path handling, uploads, streaming, and environment handling as high-risk areas.
+- Target Python 3.11+ (no 3.12-only features like `itertools.batched`)
+- Use `pathlib.Path` over `os.path`
+- Use `argparse` for CLI arguments
+- Include `--dry-run` flag for write operations
+- Prefer stdlib over third-party packages
 
-If your PR touches security-sensitive behavior, say so explicitly in the PR description and explain how you verified it.
+## Testing
 
-## Writing a Good PR Message
+- Run `make verify` after any change — it checks all 9 integration points
+- For installer changes, test on Alpine (apk), Debian/Ubuntu (apt), and
+  Fedora (dnf) if possible
+- For MCP config changes, verify both `--dry-run` and `--force` modes
+- For skill/plugin changes, verify dry-run outputs show the expected names
 
-Start with a short Thinking Path that explains the chain from project goal to the specific fix.
+## Getting help
 
-Example:
-
-> - Hermes WebUI aims for near 1:1 parity with the Hermes CLI in a browser
-> - Long-running chat turns rely on SSE streaming and session recovery
-> - Reloading during an in-flight turn can leave the UI in an inconsistent state
-> - The bug was that recovered sessions restored messages but not the live stream state
-> - This PR fixes the recovery path so in-flight turns reconnect cleanly after reload
-> - The benefit is that users can refresh or reconnect without losing visibility into active work
-
-Another example:
-
-> - Hermes WebUI is intentionally a simple Python + vanilla JS application
-> - The right panel is used for workspace browsing and previews
-> - On mobile, panel state changes need to be obvious and touch-friendly
-> - The existing close affordance was inconsistent with the bottom-nav flow
-> - This PR fixes the mobile panel close behavior and aligns it with the current navigation model
-> - The result is fewer dead-end UI states on phones
-
-After that, cover:
-
-- what you changed
-- why you changed it
-- how you verified it
-- what risks remain
-
-## Review Tips
-
-Want the smoothest review?
-
-- Keep diffs tight
-- Name things clearly
-- Avoid unnecessary rewrites
-- Add short comments only where the code would otherwise be hard to follow
-- Respond directly to review feedback and update the PR description if the scope changes
-
-## Development References
-
-- [README.md](README.md)
-- [ARCHITECTURE.md](ARCHITECTURE.md)
-- [TESTING.md](TESTING.md)
-- [ROADMAP.md](ROADMAP.md)
-- [SPRINTS.md](SPRINTS.md)
-
-Questions are best raised early, before a large change is finished.
+Open a GitHub issue with the question label, or reach out via the
+[hermes-alpine repository](https://github.com/PatrickNoFilter/hermes-alpine).

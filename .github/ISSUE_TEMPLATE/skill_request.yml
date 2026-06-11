@@ -1,0 +1,55 @@
+name: skill_request
+description: Request a new skill to be added to the hermes-alpine repository
+title: "[Skill]: "
+labels: ["skill", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a new Hermes Agent skill to include in the repository.
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill name
+      description: Short, descriptive name (e.g., docker-compose, terraform)
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - autonomous-ai-agents
+        - apple
+        - creative
+        - data-science
+        - devops
+        - email
+        - gaming
+        - github
+        - mcp
+        - media
+        - mlops
+        - note-taking
+        - productivity
+        - red-teaming
+        - research
+        - security
+        - smart-home
+        - social-media
+        - software-development
+        - (standalone / no category)
+    validations:
+      required: true
+  - type: textarea
+    id: purpose
+    attributes:
+      label: What should this skill do?
+      description: Describe the skill's purpose and key instructions it should contain.
+    validations:
+      required: true
+  - type: textarea
+    id: links
+    attributes:
+      label: Reference links
+      description: Links to relevant documentation, APIs, or existing implementations.

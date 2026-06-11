@@ -1,0 +1,31 @@
+name: feature_request
+description: Suggest an idea for hermes-alpine
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest an improvement or new feature for the hermes-alpine ecosystem.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem?
+      placeholder: "I'm always frustrated when..."
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the solution you'd like
+      placeholder: "A clear and concise description of what you want to happen."
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Describe alternatives you've considered
+  - type: input
+    id: component
+    attributes:
+      label: Component
+      description: Which part of the ecosystem?
+      placeholder: "install-skills.sh, configure-mcp.py, Docker, etc."
