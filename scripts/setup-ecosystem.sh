@@ -54,9 +54,21 @@ if [ ! -f "$HERMES_SRC/package.json" ] && [ ! -f "$HERMES_SRC/requirements.txt" 
     fetch_if_missing "requirements.txt"
     fetch_if_missing "requirements-mcp.txt"
     fetch_if_missing "package.json"
-    fetch_if_missing "pyproject.toml"
     fetch_if_missing "config.yaml.example"
     echo ""
+fi
+
+# =============================================================================
+# Clone hermes-agent from upstream if not already present
+# =============================================================================
+HERMES_AGENT_DIR="${HERMES_AGENT_DIR:-$HERMES_SRC/hermes-agent}"
+if [ ! -d "$HERMES_AGENT_DIR/.git" ]; then
+    echo ""
+    echo "=== Cloning hermes-agent (upstream) ==="
+    git clone --depth=1 https://github.com/nousresearch/hermes-agent.git "$HERMES_AGENT_DIR"
+else
+    echo ""
+    echo "=== hermes-agent already present at $HERMES_AGENT_DIR ==="
 fi
 
 # =============================================================================
@@ -234,11 +246,17 @@ fi
 echo ""
 echo "=== Step 8: Hermes Agent (editable) ==="
 
-if [ -f "$HERMES_SRC/pyproject.toml" ]; then
+if [ -f "$HERMES_AGENT_DIR/pyproject.toml" ]; then
     echo "▸ Installing hermes-agent (editable)"
-    pip install -e "$HERMES_SRC"
+    pip install -e "$HERMES_AGENT_DIR"
+    HERMES_CLI="$HERMES_AGENT_DIR/cli.py"
+    if [ -f "$HERMES_CLI" ]; then
+        echo "▸ Symlinking 'hermes' CLI to ~/.local/bin"
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$HERMES_CLI" "$HOME/.local/bin/hermes"
+    fi
 else
-    echo "▸ $HERMES_SRC/pyproject.toml not found — skipping"
+    echo "▸ $HERMES_AGENT_DIR/pyproject.toml not found — skipping"
 fi
 
 # =============================================================================
@@ -252,5 +270,7 @@ echo ""
 echo "Next steps:"
 echo "  1. cp $HERMES_SRC/config.yaml.example ~/.hermes/config.yaml"
 echo "     then add your API keys to ~/.hermes/config.yaml"
-echo "  2. Activate venv:  source $VENV/bin/activate"
-echo "  3. Start Hermes:   hermes"
+echo "  2. Add to PATH:  export PATH=\"\$HOME/.local/bin:\$PATH\""
+echo "     (add to ~/.bashrc to persist)"
+echo "  3. Activate venv:  source $VENV/bin/activate"
+echo "  4. Start Hermes:   hermes"
