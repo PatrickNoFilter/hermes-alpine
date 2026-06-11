@@ -19,51 +19,28 @@ hermes-alpine/
 
 ---
 
-## Quick install (one-shot)
+## Quick install (one-liner, no clone needed)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/PatrickNoFilter/hermes-alpine/main/scripts/setup-ecosystem.sh | sudo bash
+```
+
+That's it. The script auto-detects your distro (Alpine / Debian / Ubuntu / Fedora / Arch), installs all system deps, Python venv, pip packages, npm packages, and Hermes Agent — in the correct order.
+
+To update later, just re-run the same command.
+
+---
+
+## Full clone (if you want the repo too)
 
 ```bash
 git clone https://github.com/PatrickNoFilter/hermes-alpine.git ~/hermes-alpine
 cd ~/hermes-alpine
 chmod +x scripts/setup-ecosystem.sh
-sudo -S -p '' ./scripts/setup-ecosystem.sh
+sudo ./scripts/setup-ecosystem.sh
 ```
 
-This installs everything in the correct dependency order — system deps → Node.js → Python venv → Python packages → npm packages → Hermes Agent.
-
-**Supported distros:** Alpine, Debian/Ubuntu, Fedora, Arch (auto-detected)
-
-For custom paths:
-```bash
-HERMES_SRC=~/hermes-alpine VENV=~/.hermes/venv ./scripts/setup-ecosystem.sh
-```
-
----
-
-## Manual setup (step-by-step)
-
-```bash
-# 1. Install system deps
-apk add python3 py3-pip git nodejs npm
-
-# 2. Clone
-git clone https://github.com/PatrickNoFilter/hermes-alpine.git ~/hermes-alpine
-cd ~/hermes-alpine
-
-# 3. Copy and edit config
-cp config.yaml.example ~/.hermes/config.yaml
-nano ~/.hermes/config.yaml   # fill in your API keys
-
-# 4. Install Python deps
-pip install -r requirements.txt
-pip install -r requirements-mcp.txt
-
-# 5. Install npm deps
-npm install
-
-# 6. Bootstrap
-cd hermes-agent
-python3 bootstrap.py
-```
+Then `git pull` to update.
 
 ---
 
@@ -79,11 +56,27 @@ python3 bootstrap.py
 
 ---
 
+## After install
+
+```bash
+# 1. Configure
+cp config.yaml.example ~/.hermes/config.yaml
+nano ~/.hermes/config.yaml   # fill in your API keys
+
+# 2. Activate venv
+source venv/bin/activate
+
+# 3. Start Hermes
+hermes
+```
+
+---
+
 ## Key notes
 
 - **Never commit `config.yaml`, `.env`, or any file with live credentials** — all are excluded via `.gitignore`
 - **Runtime directories** (`sessions/`, `memories/`, `cache/`, `logs/`, `state.db`, `auth.json`) are excluded — recreate fresh on the new machine
-- **Alpine-specific**: Use `apk` instead of `apt`. Python `venv` preferred over `.venv` auto-detection. See `scripts/post-update-termux.sh` for Alpine-specific pip fixes.
+- **Alpine-specific**: Use `apk` instead of `apt`. See `scripts/post-update-termux.sh` for Alpine-specific pip fixes.
 
 ## Skills structure
 
