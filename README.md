@@ -22,7 +22,7 @@ hermes-alpine/
 ## Quick install (one-liner, no clone needed)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/PatrickNoFilter/hermes-alpine/main/scripts/setup-ecosystem.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/PatrickNoFilter/hermes-alpine/main/scripts/setup-ecosystem.sh | bash
 ```
 
 That's it. The script auto-detects your distro (Alpine / Debian / Ubuntu / Fedora / Arch), installs all system deps, Python venv, pip packages, npm packages, and Hermes Agent — in the correct order.
